@@ -86,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, proxyRefs, ref} from "vue";
+import {ref} from "vue";
 import {Player} from "@/types";
 
 const procanvas = ref<HTMLCanvasElement | null>(null);
