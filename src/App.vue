@@ -1,6 +1,7 @@
 <template>
 
-  <img src="./assets/blankboard.png" width="1280" height="720" class="hidden" alt="blankboard" ref="image"/>
+  <div style="font-family: ProximaBold,serif;"> </div>
+  <img src="./assets/blankboard2.png" width="1280" height="720" class="hidden" alt="blankboard" ref="image"/>
 
   <div
       class="p-6 bg-slate-700 w-11/12 sm:w-1/2 m-auto mt-10 rounded-lg drop-shadow-2xl  flex flex-col justify-center items-center space-y-4 mb-10">
@@ -149,7 +150,7 @@ const generateImage = (pro: boolean) => {
         ctx.drawImage(image.value, 0, 0);
 
         ctx.fillStyle = "white";
-        ctx.font = "33px Arial";
+        ctx.font = "33px ProximaBold";
 
         let inTie = false;
         topScorers.forEach((player, index) => {
@@ -211,7 +212,7 @@ const generateImage = (pro: boolean) => {
         ctx.drawImage(image.value, 0, 0);
 
         ctx.fillStyle = "white";
-        ctx.font = "33px Arial";
+        ctx.font = "33px ProximaBold";
 
         let inTie = false;
         amPlayers.value.forEach((player, index) => {

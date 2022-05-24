@@ -2,3 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+    font-family: "ProximaBold";
+    src: url("./assets/Proxima_Nova_Alt_Bold.otf");
+}
+
+body {
+    font-family: "ProximaBold", serif;
+}
