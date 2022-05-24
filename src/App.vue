@@ -171,7 +171,7 @@ const generateImage = (pro: boolean) => {
 
           ctx.stroke();
           ctx.fillStyle = score[0] === "-" ? "red" : "white";
-          ctx.fillText(score, 930, y);
+          ctx.fillText(score, score === "E" ? 942 : (score.length === 2 ? 935 : 930), y);
 
           ctx.fillStyle = "white";
           ctx.fillText(player.name + (!player.pro ? " (a)" : ""), 305, y);
@@ -233,7 +233,7 @@ const generateImage = (pro: boolean) => {
 
           ctx.stroke();
           ctx.fillStyle = score[0] === "-" ? "red" : "white";
-          ctx.fillText(score, 930, y);
+          ctx.fillText(score, score === "E" ? 942 : (score.length === 2 ? 935 : 930), y);
 
           ctx.fillStyle = "white";
           ctx.fillText(player.name, 305, y);
