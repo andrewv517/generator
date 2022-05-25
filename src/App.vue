@@ -158,11 +158,12 @@ const generateImage = (pro: boolean) => {
           const y = 265 + index * 45;
           const endTie = getEndTieYCoordinate(index, true);
           const score = getScoreString(player);
+          ctx.textAlign = "right";
 
           ctx.strokeStyle = "white";
           if (!inTie) {
             inTie = y != endTie;
-            ctx.fillText((index + 1) + "", 305 - 50, y);
+            ctx.fillText((index + 1) + "", 305 - 30, y);
             ctx.moveTo(305 - 20, y - 25);
             ctx.lineTo(305 - 20, endTie + 5);
           } else if (y == endTie) {
@@ -170,19 +171,18 @@ const generateImage = (pro: boolean) => {
           }
 
           ctx.stroke();
-          ctx.fillStyle = score[0] === "-" ? "red" : "white";
-          ctx.fillText(score, score === "E" ? 942 : (score.length === 2 ? 935 : 930), y);
 
+          ctx.textAlign = "left";
           ctx.fillStyle = "white";
           ctx.fillText(player.name + (!player.pro ? " (a)" : ""), 305, y);
 
-          ctx.fillStyle = "gold";
-          ctx.fillText(player.scores[round.value - 1] + "", 1026, y);
-          ctx.fillStyle = "white";
+          ctx.textAlign = "center";
+          ctx.fillStyle = score[0] === "-" ? "red" : "white";
+          ctx.fillText(score, 950, y);
 
-          // const grd = ctx.createLinearGradient(305, y + 10, 1032 + 30, y + 10);
-          // grd.addColorStop(0, "#2b82b7");
-          // grd.addColorStop(1, "white");
+          ctx.fillStyle = player.scores[round.value - 1] < 35 ? "red" : "gold";
+          ctx.fillText(player.scores[round.value - 1] + "", 1043, y);
+          ctx.fillStyle = "white";
 
           // Fill with gradient
           ctx.strokeStyle = "gray";
