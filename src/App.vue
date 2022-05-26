@@ -1,10 +1,10 @@
 <template>
 
-  <div style="font-family: ProximaBold,serif;"> </div>
+  <div style="font-family: ProximaBold,serif;"></div>
   <img src="./assets/blankboard2.png" width="1280" height="720" class="hidden" alt="blankboard" ref="image"/>
 
   <div
-      class="p-6 bg-slate-700 w-11/12 sm:w-1/2 m-auto mt-10 rounded-lg drop-shadow-2xl  flex flex-col justify-center items-center space-y-4 mb-10">
+      class="p-6 bg-slate-700 w-11/12 xl:w-fit m-auto mt-10 rounded-lg drop-shadow-2xl  flex flex-col justify-center items-center space-y-4 mb-10">
 
     <p class="text-white text-center font-semibold text-2xl mb-2">Enter all scores (Pro and Am) before generating
       images</p>
@@ -19,7 +19,7 @@
     </div>
 
     <div
-        class="flex flex-col md:flex-row justify-center md:justify-between items-center space-x-4 space-y-4 md:space-y-0">
+        class="flex flex-col xl:flex-row justify-center xl:justify-between items-center space-x-4 space-y-4 xl:space-y-0">
 
       <div class="space-x-2 flex justify-center items-center">
         <label for="flight" class="text-white">Flight: </label>
@@ -38,6 +38,7 @@
         <label for="name" class="text-white">Round {{ i }}: </label>
         <input v-model="roundValue[i-1]" id="round" class="border border-slate-500 rounded-md p-1"/>
       </div>
+
     </div>
 
 
@@ -49,14 +50,35 @@
       <li v-for="(player, index) in proPlayers" :key="player">{{ player.name }} {{ player.scores }}
 
         <span class="text-red-600 font-semibold cursor-pointer" @click="removePlayer(index, true)">X</span>
+        <div class="space-x-2 flex justify-center items-center" v-if="index < getPlayersInPlayoff(true)">
+          <label for="winner" class="text-white">Winner? </label>
+          <input
+              id="winner"
+              class="w-5 h-5 rounded-lg"
+              type="radio"
+              :value="player"
+              v-model="proWinner"
+          />
+        </div>
 
       </li>
+
     </ul>
 
     <ul class="text-white list-decimal space-y-1">
       <li v-for="(player, index) in amPlayers" :key="player">{{ player.name }} {{ player.scores }}
 
         <span class="text-red-600 font-semibold cursor-pointer" @click="removePlayer(index, false)">X</span>
+        <div class="space-x-2 flex justify-center items-center" v-if="index < getPlayersInPlayoff(false)">
+          <label for="winner" class="text-white">Winner? </label>
+          <input
+              id="winner"
+              class="w-5 h-5 rounded-lg"
+              type="radio"
+              :value="player"
+              v-model="amWinner"
+          />
+        </div>
 
       </li>
     </ul>
@@ -86,7 +108,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from "vue";
+import {computed, ref, watch} from "vue";
 import {Player} from "@/types";
 
 const procanvas = ref<HTMLCanvasElement | null>(null);
@@ -94,12 +116,36 @@ const amcanvas = ref<HTMLCanvasElement | null>(null);
 const link = ref<HTMLAnchorElement | null>(null);
 const proPlayers = ref<Player[]>([]);
 const amPlayers = ref<Player[]>([]);
+const proWinner = ref<Player>();
+const amWinner = ref<Player>();
 const inputValue = ref("");
 const round = ref(1);
 const roundValue = ref([]);
 const flight = ref("pro");
 const image = ref<HTMLImageElement | null>(null);
 let topScorers: Player[] = []
+
+const getPlayersInPlayoff = (pro: boolean) => {
+
+  if (round.value !== 3) return 0;
+
+  const playerArray = pro ? proPlayers : amPlayers;
+
+  if (playerArray.value.length <= 1) return 0;
+
+  for (let i = 1; i < playerArray.value.length; i++) {
+    const currentScore = playerArray.value[i].scores.reduce((prev, cur) => prev + cur);
+    const previousScore = playerArray.value[i-1].scores.reduce((prev, cur) => prev + cur);
+    if (currentScore !== previousScore && i === 1) {
+      return 0;
+    } else if (currentScore !== previousScore && i > 1) {
+      return i;
+    }
+  }
+
+  return playerArray.value.length;
+
+}
 
 const addPlayer = () => {
 
@@ -110,6 +156,7 @@ const addPlayer = () => {
       pro: true,
     })
 
+    // substract 1 from winner's score
     proPlayers.value.sort((a, b) => a.scores.reduce((prev, cur) => prev + cur) - b.scores.reduce((prev, cur) => prev + cur))
 
   } else {
@@ -141,7 +188,16 @@ const generateImage = (pro: boolean) => {
       ...proPlayers.value,
       ...amPlayers.value.filter(el => el.scores.reduce((prev, cur) => prev + cur) < worstProFlightScore)
     ]
-    topScorers.sort((a, b) => a.scores.reduce((prev, cur) => prev + cur) - b.scores.reduce((prev, cur) => prev + cur))
+    topScorers.sort((a, b) => {
+      // substract 1 from winner's score
+        let aScore = a.scores.reduce((prev, cur) => prev + cur);
+        let bScore = b.scores.reduce((prev, cur) => prev + cur);
+
+        if (proWinner.value === a) aScore--;
+        if (proWinner.value === b) bScore--;
+
+        return aScore - bScore;
+    })
 
     if (procanvas.value) {
       const ctx = procanvas.value?.getContext("2d");
@@ -156,13 +212,14 @@ const generateImage = (pro: boolean) => {
         topScorers.forEach((player, index) => {
 
           const y = 265 + index * 45;
-          const endTie = getEndTieYCoordinate(index, true);
+          const endTie = proWinner.value === player ? y : getEndTieYCoordinate(index, true);
           const score = getScoreString(player);
           ctx.textAlign = "right";
 
           ctx.strokeStyle = "white";
+
           if (!inTie) {
-            inTie = y != endTie;
+            inTie = proWinner.value !== player && y != endTie;
             ctx.fillText((index + 1) + "", 305 - 30, y);
             ctx.moveTo(305 - 20, y - 25);
             ctx.lineTo(305 - 20, endTie + 5);
@@ -206,7 +263,20 @@ const generateImage = (pro: boolean) => {
 
   } else {
     // AM FLIGHT
+
+    amPlayers.value.sort((a, b) => {
+      // substract 1 from winner's score
+      let aScore = a.scores.reduce((prev, cur) => prev + cur);
+      let bScore = b.scores.reduce((prev, cur) => prev + cur);
+
+      if (amWinner.value === a) aScore--;
+      if (amWinner.value === b) bScore--;
+
+      return aScore - bScore;
+    })
+
     if (amcanvas.value) {
+
       const ctx = amcanvas.value?.getContext("2d");
       if (ctx && image.value) {
         ctx.drawImage(image.value, 0, 0);
@@ -218,12 +288,12 @@ const generateImage = (pro: boolean) => {
         amPlayers.value.forEach((player, index) => {
 
           const y = 265 + index * 45;
-          const endTie = getEndTieYCoordinate(index, false);
+          const endTie = amWinner.value === player ? y : getEndTieYCoordinate(index, false);
           const score = getScoreString(player);
 
           ctx.strokeStyle = "white";
           if (!inTie) {
-            inTie = y != endTie;
+            inTie = amWinner.value !== player && y != endTie;
             ctx.fillText((index + 1) + "", 305 - 50, y);
             ctx.moveTo(305 - 20, y - 25);
             ctx.lineTo(305 - 20, endTie + 5);
